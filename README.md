@@ -3,7 +3,7 @@ Scrapes matchup data from dotabuff.com using Node.js
 
 ## Data structure
 ### Backbone
-```
+```json
 {
     'last-updated' : "dd/mm/yyyy",
     'hero': [{
@@ -16,7 +16,7 @@ Scrapes matchup data from dotabuff.com using Node.js
 ```
 
 ### Example
-```
+```json
 {
     'last-updated': '01/09/2016',
     'abaddon': [{
@@ -31,12 +31,14 @@ Scrapes matchup data from dotabuff.com using Node.js
 ```
 
 ## Installation
-```
+```shell
 git clone https://github.com/liangchunn/DotabuffScraper
 cd DotabuffScraper
 npm install
 ```
 
 ## Run
-```npm start```
+```shell
+npm start
+```
 When everything is complete, look for `matchup.json` in the root directory of the project.
