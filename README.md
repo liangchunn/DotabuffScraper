@@ -3,7 +3,7 @@ Scrapes matchup data from dotabuff.com using Node.js
 
 ## Data structure
 ### Backbone
-```json
+```
 {
     'last-updated' : "dd/mm/yyyy",
     'hero': [{
@@ -16,7 +16,7 @@ Scrapes matchup data from dotabuff.com using Node.js
 ```
 
 ### Example
-```json
+```
 {
     'last-updated': '01/09/2016',
     'abaddon': [{
