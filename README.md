@@ -38,6 +38,5 @@ npm install
 ```
 
 ## Run
-```
-npm start
-```
+Run `npm start`
+When everything is complete, look for `matchup.json` in the root directory of the project.
