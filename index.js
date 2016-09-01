@@ -26,6 +26,7 @@ var options = {
         'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13'
     }
 };
+var filename = "./matchup.json";
 
 
 // Date stuff
@@ -102,7 +103,7 @@ function saveFile() {
 
     console.log(colors.yellow('Saving file...'));
 
-    fs.writeFile('./matchup.js', 'var data=' + str + ';', function(error) {
+    fs.writeFile(filename, str, function(error) {
         if (error) {
             return console.log(colors.red(error));
         }
@@ -112,7 +113,7 @@ function saveFile() {
 }
 
 (function() {
-    fs.writeFile('./matchup.js', '', function(error) {
+    fs.writeFile(filename, '', function(error) {
         if (error) {
             console.log(colors.bgRed('[CRITICAL]') + colors.red(' Write test failed. Verify if folder permissions are set correctly!'));
             return console.log(colors.bgRed('[CRITICAL]') + ' ' + colors.red(error));
