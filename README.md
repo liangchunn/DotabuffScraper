@@ -13,10 +13,13 @@ Scrapes matchup data from dotabuff.com
 ```
 
 ## Installation
-```git clone https://github.com/liangchunn/DotabuffScraper
+```
+git clone https://github.com/liangchunn/DotabuffScraper
 cd DotabuffScraper
 npm install
 ```
 
 ## Run
-```npm start```
+```
+npm start
+```
