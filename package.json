@@ -1,0 +1,19 @@
+{
+    "name": "dotabuff-scraper",
+    "version": "0.0.1",
+    "description": "Dotabuff Matchups Scraper",
+    "main": "index.js",
+    "author": "liangchunn",
+    "license": "MIT",
+    "repository": "liangchunn/DotabuffScraper",
+    "dependencies": {
+        "request": "^2.74.0",
+        "cheerio": "^0.22.0",
+        "colors": "^1.1.2"
+    },
+    "scripts": {
+        "start": "node index.js"
+    }
+
+
+}
