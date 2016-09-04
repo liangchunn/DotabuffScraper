@@ -2,3 +2,5 @@
 .DS_Store
 node_modules/
 matchup.json
+
+.eslintrc.js

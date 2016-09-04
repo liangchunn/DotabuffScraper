@@ -5,7 +5,7 @@ Scrapes matchup data from dotabuff.com using Node.js
 ### Backbone
 ```
 {
-    'last-updated' : "dd/mm/yyyy",
+    'last-updated' : 'dd/mm/yyyy',
     'hero': [{
         'matchup': advantage
     }, {
@@ -24,7 +24,7 @@ Scrapes matchup data from dotabuff.com using Node.js
     }, {
         'pudge': 2.1537
     }, {
-        '...: ...
+        '...': ...
     }],
     ...
 }

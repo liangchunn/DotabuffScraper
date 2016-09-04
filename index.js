@@ -1,3 +1,4 @@
+/* eslint-env node */
 var request = require('request');
 var cheerio = require('cheerio');
 var fs = require('fs');
@@ -65,7 +66,7 @@ function SCRAPE() {
                     tries++;
                     return SCRAPE();
                 }
-                console.log(colors.bgRed('[CRITICAL]') + colors.red(' Maximum tries reached. Please check your internet connection.'));
+                console.log(colors.bgRed('[CRITICAL]') + colors.red(' Maximum tries reached. Please check your internet connection or try again later.'));
                 return;
             }
         });
