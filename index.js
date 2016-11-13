@@ -40,9 +40,10 @@ if (mm < 10) mm = '0' + mm;
 data['last-updated'] = dd + '/' + mm + '/' + yyyy;
 
 function SCRAPE() {
+
     if (index < heroes.length) {
 
-        options.url = 'http://www.dotabuff.com/heroes/' + heroes[index] + '/matchups';
+        options.url = 'http://www.dotabuff.com/heroes/' + heroes[index] + '/matchups?date=patch_6.88f';
 
         request(options, function(error, response, body) {
             if (!error && response.statusCode === 200 && tries <= maxTries) {
@@ -59,14 +60,20 @@ function SCRAPE() {
                 index++;
                 tries = 0;
                 process.stdout.write(colors.green('SUCCESS') + '\n');
+
+                // call recursively one after another request
                 return SCRAPE();
+
             } else {
+
                 if (tries <= maxTries) {
                     console.log(colors.bgYellow('[WARN]') + colors.yellow(' ' + error + ' Trying again for '+heroes[index]+'... [' + tries + '/' + maxTries + ']'));
                     tries++;
                     return SCRAPE();
                 }
+
                 console.log(colors.bgRed('[CRITICAL]') + colors.red(' Maximum tries reached. Please check your internet connection or try again later.'));
+
                 return;
             }
         });
