@@ -10,12 +10,13 @@ var heroes = ['abaddon', 'alchemist', 'ancient-apparition', 'anti-mage', 'arc-wa
     'chaos-knight',
     'chen', 'clinkz', 'clockwerk', 'crystal-maiden', 'dark-seer', 'dazzle', 'death-prophet', 'disruptor', 'doom', 'dragon-knight', 'drow-ranger', 'earth-spirit', 'earthshaker', 'elder-titan', 'ember-spirit', 'enchantress', 'enigma',
     'faceless-void', 'gyrocopter', 'huskar', 'invoker', 'io', 'jakiro', 'juggernaut', 'keeper-of-the-light', 'kunkka', 'legion-commander', 'leshrac', 'lich', 'lifestealer', 'lina', 'lion', 'lone-druid', 'luna', 'lycan', 'magnus',
-    'medusa', 'meepo', 'mirana', 'morphling', 'naga-siren', 'natures-prophet', 'necrophos', 'night-stalker', 'nyx-assassin', 'ogre-magi', 'omniknight', 'oracle', 'outworld-devourer', 'phantom-assassin', 'phantom-lancer', 'phoenix',
+    'medusa', 'meepo', 'mirana', 'monkey-king' ,'morphling', 'naga-siren', 'natures-prophet', 'necrophos', 'night-stalker', 'nyx-assassin', 'ogre-magi', 'omniknight', 'oracle', 'outworld-devourer', 'phantom-assassin', 'phantom-lancer', 'phoenix',
     'puck', 'pudge',
     'pugna', 'queen-of-pain', 'razor', 'riki', 'rubick', 'sand-king', 'shadow-demon', 'shadow-fiend', 'shadow-shaman', 'silencer', 'skywrath-mage', 'slardar', 'slark', 'sniper', 'spectre', 'spirit-breaker', 'storm-spirit', 'sven',
     'techies', 'templar-assassin', 'terrorblade', 'tidehunter', 'timbersaw', 'tinker', 'tiny', 'treant-protector', 'troll-warlord', 'tusk', 'underlord', 'undying', 'ursa', 'vengeful-spirit', 'venomancer', 'viper', 'visage', 'warlock', 'weaver',
     'windranger', 'winter-wyvern', 'witch-doctor', 'wraith-king', 'zeus'
 ];
+// var heroes = ['abaddon'];
 var data = {};
 var index = 0;
 var tries = 1;
@@ -39,23 +40,30 @@ if (dd < 10) dd = '0' + dd;
 if (mm < 10) mm = '0' + mm;
 data['last-updated'] = dd + '/' + mm + '/' + yyyy;
 
+
+// Patch version
+var patchVersion = "7.01";
+data['patch-version'] = patchVersion;
+
 function SCRAPE() {
 
     if (index < heroes.length) {
 
-        options.url = 'http://www.dotabuff.com/heroes/' + heroes[index] + '/matchups?date=patch_6.88f';
-
+        options.url = 'http://www.dotabuff.com/heroes/' + heroes[index] + '/matchups?date=patch_' + patchVersion;
         request(options, function(error, response, body) {
             if (!error && response.statusCode === 200 && tries <= maxTries) {
                 process.stdout.write('Loaded data for ' + heroes[index] + '. Processing... ');
                 var $ = cheerio.load(body);
                 data[heroes[index]] = [];
                 $('tbody tr').each(function() {
-                    var newObj = {};
-                    var name = $('td a', this).attr('href').replace('/heroes/', '');
-                    var winRate = Number($('td:nth-child(3)', this).attr('data-value'));
-                    newObj[name] = winRate;
-                    data[heroes[index]].push(newObj);
+                    if (!$('td', this).hasClass('talent-cell')) {
+                        var newObj = {};
+                        var winRate = Number($('td:nth-child(3)', this).attr('data-value'));
+                        var name = $('td a', this).attr('href').replace('/heroes/', '');
+                        // console.log(name, winRate);
+                        newObj[name] = winRate;
+                        data[heroes[index]].push(newObj);
+                    }
                 });
                 index++;
                 tries = 0;
@@ -67,7 +75,7 @@ function SCRAPE() {
             } else {
 
                 if (tries <= maxTries) {
-                    console.log(colors.bgYellow('[WARN]') + colors.yellow(' ' + error + ' Trying again for '+heroes[index]+'... [' + tries + '/' + maxTries + ']'));
+                    console.log(colors.bgYellow('[WARN]') + colors.yellow(' ' + error + ' Trying again for ' + heroes[index] + '... [' + tries + '/' + maxTries + ']'));
                     tries++;
                     return SCRAPE();
                 }
@@ -91,7 +99,7 @@ function validateJSON() {
     console.log(colors.yellow('Validating captured data...'));
 
     for (var property in data) {
-        if (index > 0) {
+        if (index > 1) {
             if (data[property].length !== lengthCheck) {
                 console.log(colors.bgRed('[CRITICAL]') + colors.red(' Something went wrong with validating ' + heroes[index - 1]));
                 console.log(colors.bgRed('[CRITICAL]') + colors.red(' Expected length of ' + lengthCheck + ', but instead got ' + data[property].length));
@@ -127,6 +135,7 @@ function saveFile() {
             return console.log(colors.bgRed('[CRITICAL]') + ' ' + colors.red(error));
         }
         console.log(colors.green('Write test successful!'));
+        console.log(colors.green('Game revision: ' + patchVersion));
         SCRAPE();
     });
 })();
