@@ -2,19 +2,21 @@
 var request = require('request');
 var cheerio = require('cheerio');
 var fs = require('fs');
-var colors = require('colors/safe');
 
 var options = {
-    filename: "./matchup.json",
-    patchVersion: "7.01"
-}
+    filename: './matchup.json',
+    patchVersion: '7.01'
+};
+
+var MAX_TRIES_REACHED = 'Maximum tries reached!';
 
 function Scraper(options) {
     this.options = options;
     this.data = {};
     this.index = 0;
-    this.tries = 1;
+    this.tries = 0;
     this.maxTries = 15;
+    this.fallbackURI = false;
     this.heroes = ['abaddon', 'alchemist', 'ancient-apparition', 'anti-mage', 'arc-warden', 'axe', 'bane', 'batrider', 'beastmaster', 'bloodseeker', 'bounty-hunter', 'brewmaster', 'bristleback', 'broodmother', 'centaur-warrunner',
         'chaos-knight',
         'chen', 'clinkz', 'clockwerk', 'crystal-maiden', 'dark-seer', 'dazzle', 'death-prophet', 'disruptor', 'doom', 'dragon-knight', 'drow-ranger', 'earth-spirit', 'earthshaker', 'elder-titan', 'ember-spirit', 'enchantress', 'enigma',
@@ -31,72 +33,71 @@ function Scraper(options) {
         headers: {
             'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13'
         }
-    }
-    this.initalize();
-    this.fetch();
+    };
 }
 
 Scraper.prototype.fetch = function() {
     var self = this;
+    var URI = (this.fallbackURI) ? '' : `?date=patch_${this.options.patchVersion}`;
+    var heroName = this.heroes[this.index];
+
+    if (self.tries >= self.maxTries) throw MAX_TRIES_REACHED;
+
     if (this.index < this.length) {
-        this.URLWrapper.url = 'http://www.dotabuff.com/heroes/' + this.heroes[this.index] + '/matchups?date=patch_' + this.options.patchVersion;
+        this.URLWrapper.url = `http://www.dotabuff.com/heroes/${heroName}/matchups${URI}`;
         request(this.URLWrapper, function(error, response, body) {
-            if (!error && response.statusCode === 200 && self.tries <= self.maxTries) {
-                process.stdout.write('Loaded data for ' + self.heroes[self.index] + '. Processing... ');
-                var $ = cheerio.load(body);
-                self.data[self.heroes[self.index]] = [];
-                $('tbody tr').each(function() {
-                    if (!$('td', this).hasClass('talent-cell')) {
-                        var newObj = {};
-                        var winRate = Number($('td:nth-child(3)', this).attr('data-value'));
-                        var name = $('td a', this).attr('href').replace('/heroes/', '');
-                        newObj[name] = winRate;
-                        self.data[self.heroes[self.index]].push(newObj);
-                    }
-                });
-                self.index++;
-                self.tries = 1;
-                process.stdout.write(colors.green('SUCCESS') + '\n');
-                return self.fetch();    // Call recursively one after another request
-            } else if (response.statusCode === 404) {
-                console.log(colors.bgRed("[CRITICAL]") + colors.red(' Error 404: URL invalid. Please check if version number exists!'));
-            } else {
-                if (self.tries <= self.maxTries) {
-                    console.log(colors.bgYellow('[WARN]') + colors.yellow(' ' + error + ' Trying again for ' + self.heroes[self.index] + '... [' + self.tries + '/' + self.maxTries + ']'));
-                    self.tries++;
-                    return self.fetch();
-                }
-                console.log(colors.bgRed('[CRITICAL]') + colors.red(' Maximum tries reached. Please check your internet connection or try again later.'));
-                self.dumpFile();
-                return;
+
+            if (error || response.statusCode !== 200) {
+                self.tries++;
+                process.stdout.write(`Trying again [${self.tries}/${self.maxTries}] \n`);
+                return self.fetch();
             }
+
+            process.stdout.write(`Loaded data for ${heroName}. Processing... `);
+            var $ = cheerio.load(body);
+            self.data[heroName] = [];
+            $('tbody tr').each(function() {
+                if (!$('td', this).hasClass('talent-cell')) {
+                    var newObject = {};
+                    var advantagePercentage = Number($('td:nth-child(3)', this).attr('data-value'));
+                    var name = $('td a', this).attr('href').replace('/heroes/', '');
+                    newObject[name] = advantagePercentage;
+                    self.data[heroName].push(newObject);
+                }
+            });
+            process.stdout.write('Done! \n');
+            self.tries = 0;
+            self.index++;
+            return self.fetch();
         });
     } else {
-        console.log(colors.green('Parsing complete!'));
+        process.stdout.write('Parsing complete! \n');
         this.validateJSON();
     }
+
 };
 
 Scraper.prototype.validateJSON = function() {
     var index = 0;
     var lengthCheck = this.length - 1;
-    console.log(colors.yellow('Validating captured data...'));
+    process.stdout.write('Validating captured data... \n');
     for (var property in this.data) {
         if (index > 1) {
             if (this.data[property].length !== lengthCheck) {
-                console.log(colors.bgRed('[CRITICAL]') + colors.red(' Something went wrong with validating ' + this.heroes[index - 1]));
-                console.log(colors.bgRed('[CRITICAL]') + colors.red(' Expected length of ' + lengthCheck + ', but instead got ' + this.data[property].length));
+                process.stdout.write(`[ERR!] Something went wrong with validating ${this.heroes[index - 1]} \n`);
+                process.stdout.write(`[ERR!] Expected length of ${lengthCheck} but instead got ${this.data[property].length} \n`);
                 this.dumpFile();
                 return;
             }
         }
         index++;
     }
-    console.log(colors.green('Successfully validated all objects!'));
+    process.stdout.write('Successfully validated all objects! \n');
     this.saveFile();
 };
 
-Scraper.prototype.initalize = function() {
+Scraper.prototype.start = function() {
+    var self = this;
     var today = new Date();
     var dd = today.getDate();
     var mm = today.getMonth() + 1;
@@ -104,30 +105,45 @@ Scraper.prototype.initalize = function() {
     if (dd < 10) dd = '0' + dd;
     if (mm < 10) mm = '0' + mm;
     this.data['last-updated'] = dd + '/' + mm + '/' + yyyy;
-    this.data['patch-version'] = this.options.patchVersion;
+    request({
+            url: `http://www.dotabuff.com/heroes/abaddon/matchups?date=patch_${self.options.patchVersion}`,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13'
+            }
+        },
+        function(error, response) {
+            if (response.statusCode !== 200) {
+                process.stdout.write(`[ERR!] Error loading ${self.options.patchVersion}! Fallback to no versioning! \n`);
+                self.fallbackURI = true;
+                self.data['patch-version'] = '';
+            } else {
+                self.data['patch-version'] = self.options.patchVersion;
+            }
+            self.fetch();
+        });
 };
 
 Scraper.prototype.saveFile = function() {
     var str = JSON.stringify(this.data, null);
-    console.log(colors.yellow('Saving file...'));
+    process.stdout.write('Saving file... \n');
     fs.writeFile(this.options.filename, str, function(error) {
         if (error) {
-            console.log(colors.red(error));
+            throw error;
         } else {
-            console.log(colors.green('File was saved!'));
+            process.stdout.write('File was saved! \n');
         }
     });
 };
 
 Scraper.prototype.dumpFile = function() {
     var str = JSON.stringify(this.data, null);
-    var filename = this.options.filename + ".dump";
-    console.log(colors.red('Dumping ' + filename + "..."));
+    var filename = this.options.filename + '.dump';
+    process.stdout.write(`Dumping ${filename}... \n`);
     fs.writeFile(filename, str, function(error) {
         if (error) {
-            console.log(colors.red(error));
+            throw error;
         } else {
-            console.log(colors.red(filename + ' dumped.'));
+            process.stdout.write(`${filename} dumped. \n`);
         }
     });
 };
@@ -135,11 +151,13 @@ Scraper.prototype.dumpFile = function() {
 (function() {
     fs.writeFile(options.filename, '', function(error) {
         if (error) {
-            console.log(colors.bgRed('[CRITICAL]') + colors.red(' Write test failed. Verify if folder permissions are set correctly!'));
-            return console.log(colors.bgRed('[CRITICAL]') + ' ' + colors.red(error));
+            process.stdout.write('[ERR!] Write test failed. Verify if folder permissions are set correctly. \n');
+            return;
         }
-        console.log(colors.green('Write test successful!'));
-        console.log(colors.green('Fetching game revision ' + options.patchVersion));
+        process.stdout.write('Write test successful! \n');
+        process.stdout.write(`Fetching data for game revision ${options.patchVersion} \n`);
         var scraper = new Scraper(options);
+        scraper.start();
     });
+
 })();
