@@ -1,44 +1,53 @@
 # DotabuffScraper
-Scrapes matchup data from dotabuff.com using Node.js
 
-## Data structure
-### Backbone
-```
-{
-    'last-updated' : 'dd/mm/yyyy',
-    'hero': [{
-        'matchup': advantage
-    }, {
-        '...': ...
-    }],
-    ...
-}
-```
+Scrapes Dota 7.21 matchup data from DOTABUFF.com using RxJS
 
-### Example
-```
-{
-    'last-updated': '01/09/2016',
-    'abaddon': [{
-        'silencer': 2.7672
-    }, {
-        'pudge': 2.1537
-    }, {
-        '...': ...
-    }],
-    ...
-}
-```
+## Usage
+```sh
+# clone the repo
+git clone https://github.com/liangchunn/DotabuffScraper.git
 
-## Installation
-```shell
-git clone https://github.com/liangchunn/DotabuffScraper
+# change working dir
 cd DotabuffScraper
-npm install
+
+# install dependencies
+yarn
+
+# build the source
+yarn build
+
+# run the code, and the result JSON will be emitted
+node build/index.js
 ```
 
-## Run
-```shell
-npm start
+## Data Structure
+```ts
+type HeroName = string
+type MatchupHeroName = string
+
+type ResultType = Record<HeroName, Record<MatchupHeroName, number>>
 ```
-When everything is complete, look for `matchup.json` in the root directory of the project.
+
+Example:
+```
+{
+ "ancient-apparition": {
+    "anti-mage": 3.822,
+    "phantom-lancer": 3.25,
+    "lycan": 3.1062,
+    "storm-spirit": 3.0888,
+    "broodmother": 2.5598,
+    "huskar": -5.5224,
+    "...": ...,
+ },
+ "arc-warden": {
+    "broodmother": 8.7522,
+    "meepo": 6.4986,
+    "lycan": 4.914,
+    "phantom-lancer": 4.026,
+    "naga-siren": 3.9557,
+    "venomancer": -4.0473,
+    "...": ...,
+ }
+}
+```

@@ -1,20 +1,26 @@
 {
   "name": "dotabuff-scraper",
-  "version": "0.0.1",
-  "description": "Dotabuff Matchups Scraper",
-  "main": "index.js",
-  "author": "liangchunn",
+  "version": "1.0.0",
+  "main": "build/index.js",
+  "private": true,
   "license": "MIT",
-  "repository": "liangchunn/DotabuffScraper",
-  "dependencies": {
-    "request": "^2.74.0",
-    "cheerio": "^0.22.0"
-  },
   "scripts": {
-    "start": "node index.js"
+    "watch": "tsc -p . --watch",
+    "build": "tsc",
+    "lint": "tslint --project ."
   },
   "devDependencies": {
-    "eslint": "^3.13.1",
-    "eslint-config-google": "^0.7.1"
+    "@types/cheerio": "^0.22.9",
+    "@types/jest": "^23.3.9",
+    "@types/node": "^10.12.10",
+    "@types/progress": "^2.0.3",
+    "tslint": "^5.11.0",
+    "typescript": "^3.4.3"
+  },
+  "dependencies": {
+    "@akanass/rx-http-request": "^3.1.0",
+    "cheerio": "^1.0.0-rc.2",
+    "progress": "^2.0.3",
+    "rxjs": "^6.3.3"
   }
 }
